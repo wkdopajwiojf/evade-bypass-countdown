@@ -1,0 +1,172 @@
+--// 💬 Credit: ChatGPT
+--// 🌈 Smooth Rainbow Credit + Outline + Hide Battlepass GUI (runtime)
+--// 🐱 reworked by ChatGPT (rainbow + safe nil checks + cleaner code)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LP = Players.LocalPlayer
+local PlayerGui = LP:WaitForChild("PlayerGui")
+
+----------------------------------------------------------------------
+-- 👑 CONFIG ZONE
+----------------------------------------------------------------------
+
+local DISPLAY_TEXT = "Credit by ลุงอาร์ม" 
+-- 👆 ข้อความที่จะโชว์กลางจอ (ปรับได้)
+
+local Y_OFFSET_PX = 8 - 2
+-- เธอบอก "ขอขึ้นไปด้านบนอีกซัก 2 หน่วย" หนูเลยขยับขึ้น (-2 px)
+
+local RAINBOW_UPDATE = 0.03 -- ความเร็วเลื่อนสีรุ้ง
+local OUTLINE_OFFSET = 2    -- ระยะขอบดำรอบตัวอักษร (px)
+
+----------------------------------------------------------------------
+-- 🖼 สร้าง ScreenGui หลัก
+----------------------------------------------------------------------
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "มาดูเหี้ยอะไร"
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+----------------------------------------------------------------------
+-- 🔡 ฟังก์ชันสร้าง TextLabel (ใช้ทั้งตัวหลักและขอบ)
+----------------------------------------------------------------------
+
+local function createTextLabel(props)
+	local lbl = Instance.new("TextLabel")
+	lbl.Name = props.Name or "Label"
+	lbl.Parent = props.Parent
+	lbl.AnchorPoint = Vector2.new(0.5, 0)
+	lbl.Position = UDim2.new(0.5, props.OffsetX or 0, 0, (props.OffsetY or 0))
+	lbl.Size = UDim2.new(0, 240, 0, 40)
+	lbl.BackgroundTransparency = 1
+	lbl.Font = Enum.Font.GothamBold
+	lbl.TextScaled = true
+	lbl.Text = props.Text or ""
+	lbl.TextColor3 = props.Color or Color3.new(1,1,1)
+	lbl.TextTransparency = 0
+	lbl.TextStrokeTransparency = 1 -- เราจะทำ outline manual เองอยู่แล้ว
+	return lbl
+end
+
+----------------------------------------------------------------------
+-- 🖤 สร้าง outline 8 ทิศทางรอบข้อความ
+----------------------------------------------------------------------
+
+local outlineFolder = Instance.new("Folder")
+outlineFolder.Name = "OutlineFolder"
+outlineFolder.Parent = ScreenGui
+
+local outlineOffsets = {
+	Vector2.new(-1,  0), Vector2.new(1, 0),
+	Vector2.new( 0, -1), Vector2.new(0, 1),
+	Vector2.new(-1, -1), Vector2.new(-1, 1),
+	Vector2.new( 1, -1), Vector2.new(1, 1)
+}
+
+for i, dir in ipairs(outlineOffsets) do
+	createTextLabel({
+		Name = "Outline_"..i,
+		Parent = outlineFolder,
+		Text = DISPLAY_TEXT,
+		Color = Color3.fromRGB(0,0,0),
+		OffsetX = dir.X * OUTLINE_OFFSET,
+		OffsetY = Y_OFFSET_PX + dir.Y * OUTLINE_OFFSET,
+	})
+end
+
+----------------------------------------------------------------------
+-- 🌈 ชั้นข้อความหลัก (สีรุ้งวิบวับ)
+----------------------------------------------------------------------
+
+local mainText = createTextLabel({
+	Name = "MainText",
+	Parent = ScreenGui,
+	Text = DISPLAY_TEXT,
+	Color = Color3.fromRGB(255,255,255),
+	OffsetX = 0,
+	OffsetY = Y_OFFSET_PX,
+})
+
+-- Gradient สีรุ้ง
+local gradient = Instance.new("UIGradient")
+gradient.Rotation = 0
+gradient.Parent = mainText
+
+-- palette สีรุ้งเริ่มต้น
+local rainbowColors = {
+	Color3.fromRGB(255,   0,   0),   -- แดง
+	Color3.fromRGB(255, 128,   0),   -- ส้ม
+	Color3.fromRGB(255, 255,   0),   -- เหลือง
+	Color3.fromRGB(  0, 255,   0),   -- เขียว
+	Color3.fromRGB(  0, 128, 255),   -- ฟ้า
+	Color3.fromRGB(128,   0, 255),   -- ม่วง
+	Color3.fromRGB(255,   0, 255),   -- ชมพู
+}
+
+local function buildColorSequence(tbl)
+	local seq = {}
+	local lastIndex = #tbl - 1
+	if lastIndex < 1 then
+		-- กันพังถ้ามีสีเดียว
+		return ColorSequence.new({
+			ColorSequenceKeypoint.new(0, tbl[1] or Color3.new(1,1,1)),
+			ColorSequenceKeypoint.new(1, tbl[1] or Color3.new(1,1,1)),
+		})
+	end
+
+	for i, c in ipairs(tbl) do
+		local t = (i-1)/lastIndex
+		seq[#seq+1] = ColorSequenceKeypoint.new(t, c)
+	end
+	return ColorSequence.new(seq)
+end
+
+gradient.Color = buildColorSequence(rainbowColors)
+
+-- ลูปอัปเดต gradient ให้ไหลซ้าย→ขวาแบบ barber pole
+task.spawn(function()
+	while true do
+		task.wait(RAINBOW_UPDATE)
+		-- ย้ายสีตัวแรกไปท้าย = สไลด์พาเลต
+		local first = table.remove(rainbowColors, 1)
+		table.insert(rainbowColors, first)
+		gradient.Color = buildColorSequence(rainbowColors)
+	end
+end)
+
+----------------------------------------------------------------------
+-- 🙈 ซ่อน Battlepass GUI runtime แบบปลอดภัย
+-- จุดประสงค์: force .Visible = false ตลอด ถ้ามันเด้งกลับมาก็ปิดใหม่
+----------------------------------------------------------------------
+
+-- helper สำหรับหา descendant แบบ chain ปลอดภัย
+local function deepFind(root, pathArray)
+	local current = root
+	for _, name in ipairs(pathArray) do
+		if not current then return nil end
+		current = current:FindFirstChild(name)
+	end
+	return current
+end
+
+local targetPath = {
+	"Menu",
+	"Views",
+	"Battlepass",
+	"ViewPass",
+	"Center",
+	"ViewPass",
+	"Unlocked"
+}
+
+RunService.RenderStepped:Connect(function()
+	-- ซ่อน Battlepass unlock panel
+	local unlocked = deepFind(PlayerGui, targetPath)
+	if unlocked and unlocked.Visible == true then
+		unlocked.Visible = false
+	end
+end)
